@@ -81,3 +81,4 @@ passwordRequirements pwd = do
   pwd'' <- passwordHasDigit pwd'
   pwd''' <- passwordHasUppercase pwd''
   passwordHasLowercase pwd'''
+

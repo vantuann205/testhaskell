@@ -35,7 +35,7 @@ httpLBS :: MonadIO m => Request -> m (Response ByteString)
 + Network.HTTP.Simple.getResponseBody
 -}
 
-module Main where
+module Main where 
 
 -- use "qualified" for all imports to show clearly which function belongs to which package
 import qualified Data.ByteString.Lazy.Char8
