@@ -1,0 +1,218 @@
+-- I>
+--data Either a b = Left a | Right b
+-- Either a b có thể là Left a hoặc Right b.
+-- Left chứa giá trị kiểu a, thường được sử dụng để chứa thông tin lỗi.
+-- Right chứa giá trị kiểu b, thường được sử dụng để chứa kết quả thành công.
+--Ví dụ 1: Sử dụng Either để biểu diễn kết quả của một phép tính có thể thất bại
+-- Một hàm chia hai số, trả về `Either` để biểu diễn kết quả hoặc lỗi
+-- safeDiv :: Int -> Int -> Either String Int
+-- safeDiv _ 0 = Left "Division by zero error"
+-- safeDiv x y = Right (x `div` y)
+-- main :: IO ()
+-- main = do
+--     print (safeDiv 10 2)  -- Kết quả: Right 5
+--     print (safeDiv 10 0)  -- Kết quả: Left "Division by zero error"
+--Ví dụ 2: Sử dụng Either với fmap
+--Ví dụ 3: Sử dụng Either trong một chuỗi các phép tính
+-- Một chuỗi các phép tính có thể thất bại
+-- compute :: Int -> Int -> Int -> Either String Int
+-- compute x y z = do
+--   a <- safeDiv x y
+--   safeDiv a z
+-- main :: IO ()
+-- main = do
+--   print (compute 20 2 2) -- Kết quả: Right 5
+--   print (compute 20 0 2) -- Kết quả: Left "Division by zero error"
+--   print (compute 20 2 0) -- Kết quả: Left "Division by zero error"
+-- Ví dụ 4: Sử dụng Either trong một hàm kiểm tra giá trị đầu vào
+-- Kiểm tra xem một số có dương không
+-- checkPositive :: Int -> Either String Int
+-- checkPositive x
+--     | x < 0     = Left "Number is negative"
+--     | otherwise = Right x
+-- main :: IO ()
+-- main = do
+--     print (checkPositive 10)  -- Kết quả: Right 10
+--     print (checkPositive (-5))  -- Kết quả: Left "Number is negative"
+--II>
+-- fmap :: Functor f => (a -> b) -> f a -> f b
+--Nó nhận một hàm (a -> b) và một functor f a,
+--và trả về một functor f b với hàm đó được áp dụng lên các giá trị bên trong functor.
+--ví dụ 1: Sử dụng fmap với Maybe
+---- Hàm tăng một số lên 1
+-- import Data.Maybe
+-- inc :: Int -> Int
+-- inc x = x + 1
+-- main :: IO ()
+-- main = do
+--     let value1 = Just 5
+--     let value2 = Nothing
+--     print (fmap inc value1) -- Kết quả: Just 6
+--     print (fmap inc value2) -- Kết quả: Nothing
+--ví dụ 2:Sử dụng fmap với List
+-- double :: Int -> Int
+-- double x = x * 2
+-- main :: IO ()
+-- main = do
+--     let values = [1, 2, 3, 4, 5]
+--     print (fmap double values) -- Kết quả: [2, 4, 6, 8, 10]
+--Ví dụ 3: Sử dụng fmap với Either
+-- Hàm thêm tiền tố "Error: " vào chuỗi
+-- addErrorPrefix :: String -> String
+-- addErrorPrefix msg = "Error: " ++ msg
+-- main :: IO ()
+-- main = do
+--   let value1 = Right 42 :: Either Int Int
+--   let value2 = Left "Something went wrong"
+--   print (fmap show value1) -- Kết quả: Right "42"
+--   print (fmap addErrorPrefix value2) -- Kết quả: Left "Error: Something went wrong"
+--Ví dụ 4: Sử dụng fmap với Tree
+-- data Tree a = Empty | Node a (Tree a) (Tree a) deriving (Show)
+-- instance Functor Tree where
+--     fmap _ Empty = Empty
+--     fmap f (Node x left right) = Node (f x) (fmap f left) (fmap f right)
+-- -- Hàm tăng gấp đôi một số
+-- double :: Int -> Int
+-- double x = x * 2
+-- main :: IO ()
+-- main = do
+--     let tree = Node 1 (Node 2 Empty Empty) (Node 3 Empty Empty)
+--     print (fmap double tree) -- Kết quả: Node 2 (Node 4 Empty Empty) (Node 6 Empty Empty)
+--Ví dụ 5: Sử dụng fmap với IO
+-- import           Data.Char (toUpper)
+-- main :: IO ()
+-- main = do
+--   putStrLn "Please enter a string:"
+--   input <- getLine
+--   uppercasedInput <- fmap (map toUpper) (return input)
+--   putStrLn uppercasedInput
+--III>
+--Monad là gì?
+--Một Monad là một type class với các phép toán đặc biệt (bind và return) cùng với một vài luật phải tuân thủ.
+--Monad cung cấp một cách để bọc giá trị trong một ngữ cảnh (ví dụ: có thể thất bại, có trạng thái, có I/O)
+--và sau đó thực hiện các phép toán trên các giá trị được bọc đó.
+--type Monad :: (* -> *) -> Constraint
+-- class Monad m where
+--     (>>=)  :: m a -> (a -> m b) -> m b  -- bind
+--     return :: a -> m a                   -- return
+-- return lấy một giá trị và bọc nó trong ngữ cảnh monad.
+-- >>= (bind) lấy một giá trị được bọc trong ngữ cảnh monad và một hàm, rồi áp dụng hàm đó lên giá trị bên trong ngữ cảnh.
+--Monad với Maybe
+-- safeDiv :: Int -> Int -> Maybe Int
+-- safeDiv _ 0 = Nothing
+-- safeDiv x y = Just (x `div` y)
+-- example :: Int -> Int -> Int -> Maybe Int
+-- example x y z = do
+--   a <- safeDiv x y
+--   b <- safeDiv a z
+--   return b
+--List Monad
+-- [] (list) cũng là một monad, và nó được sử dụng để xử lý các tính toán không định trước số lượng kết quả.
+-- example :: [Int] -> [Int] -> [Int]
+-- example xs ys = do
+--     x <- xs
+--     y <- ys
+--     return (x + y)
+-- main :: IO ()
+-- main = do
+--     print (example [1, 2, 3] [4, 5])  -- [5,6,6,7,7,8]
+--3. IO:....
+--4. Either
+-- Either là một monad dùng để biểu diễn kết quả có thể là một trong hai loại, thường dùng để xử lý lỗi.
+-- safeDiv :: Int -> Int -> Either String Int
+-- safeDiv _ 0 = Left "Division by zero error"
+-- safeDiv x y = Right (x `div` y)
+-- compute :: Int -> Int -> Int -> Either String Int
+-- compute x y z = do
+--     a <- safeDiv x y
+--     b <- safeDiv a z
+--     return b
+-- IV> Hàm try
+--Hàm try trong Haskell thường được sử dụng để xử lý các ngoại lệ trong các phép toán I/O hoặc các tình huống có thể xảy ra lỗi.
+--try là một hàm trong thư viện Control.Exception,
+--được dùng để bắt các ngoại lệ và xử lý chúng một cách an toàn, mà không làm gián đoạn chương trình.
+--try :: Exception e => IO a -> IO (Either e a)
+--Exception e => nghĩa là e phải là một kiểu ngoại lệ hợp lệ.
+-- IO a là hành động I/O có thể gây ra ngoại lệ.
+-- IO (Either e a) là kết quả của hành động I/O. Nếu không có lỗi, kết quả sẽ là Right a, còn nếu có lỗi, kết quả sẽ là Left e.
+--Ví dụ 1: Đọc tập tin với try
+-- import Control.Exception (try, IOException)
+-- readFileSafely :: FilePath -> IO (Either IOException String)
+-- readFileSafely path = try (readFile path)
+-- main :: IO ()
+-- main = do
+--     result <- readFileSafely "nonexistent.txt"
+--     case result of
+--         Left ex  -> putStrLn ("An error occurred: " ++ show ex)
+--         Right content -> putStrLn ("File content: " ++ content)
+--Ví dụ 2: Chia số với try
+-- import Control.Exception (try, SomeException)
+-- safeDiv :: Int -> Int -> Either SomeException Int
+-- safeDiv _ 0 = Left (userError "Division by zero")
+-- safeDiv x y = Right (x `div` y)
+-- compute :: Int -> Int -> IO ()
+-- compute x y = do
+--     result <- try (evaluate (safeDiv x y))
+--     case result of
+--         Left ex -> putStrLn ("Error: " ++ show ex)
+--         Right (Right res) -> putStrLn ("Result: " ++ show res)
+--         Right (Left ex) -> putStrLn ("Error: " ++ show ex)
+-- main :: IO ()
+-- main = do
+--     compute 10 2  -- Kết quả: Result: 5
+--     compute 10 0  -- Kết quả: Error: Division by zero
+--Ví dụ 3: Sử dụng try trong một chuỗi các hành động I/O
+-- import Control.Exception (try, IOException)
+-- safeOpenFile :: FilePath -> IO (Either IOException Handle)
+-- safeOpenFile path = try (openFile path ReadMode)
+-- safeCloseFile :: Handle -> IO (Either IOException ())
+-- safeCloseFile handle = try (hClose handle)
+-- main :: IO ()
+-- main = do
+--     result <- safeOpenFile "example.txt"
+--     case result of
+--         Left ex -> putStrLn ("Failed to open file: " ++ show ex)
+--         Right handle -> do
+--             putStrLn "File opened successfully"
+--             closeResult <- safeCloseFile handle
+--             case closeResult of
+--                 Left ex -> putStrLn ("Failed to close file: " ++ show ex)
+--                 Right _ -> putStrLn "File closed successfully"
+-- try được sử dụng để bắt và xử lý ngoại lệ trong các hành động I/O.
+-- Nó giúp xử lý lỗi một cách an toàn mà không làm gián đoạn chương trình.
+-- Các ví dụ phổ biến bao gồm đọc tập tin, chia số, và xử lý chuỗi các hành động I/O.
+-- Sử dụng try giúp chương trình của bạn trở nên linh hoạt hơn trong việc xử lý các tình huống lỗi,
+--đảm bảo rằng lỗi được xử lý một cách nhất quán và không làm ảnh hưởng đến toàn bộ chương trình.
+--V>either. Hàm này có thể được sử dụng để xử lý kết quả từ các phép toán mà có thể thành công hoặc thất bại,
+-- thường được dùng với kiểu dữ liệu Either.
+--either :: (a -> c) -> (b -> c) -> Either a b -> c
+--Tham số:
+-- (a -> c): Hàm xử lý trường hợp Left a.
+-- (b -> c): Hàm xử lý trường hợp Right b.
+-- Either a b: Giá trị có thể là Left hoặc Right.
+-- Kết quả:
+-- Hàm either sẽ áp dụng một trong hai hàm đầu vào tùy thuộc vào giá trị của Either, và trả về kết quả.
+--Ví dụ 1: Xử lý lỗi
+-- import           Data.Either (either)
+-- -- Hàm xử lý kết quả từ Either
+-- handleResult :: Either String Int -> String
+-- handleResult =
+--   either (\err -> "Error: " ++ err) (\val -> "Success: " ++ show val)
+-- main :: IO ()
+-- main = do
+--   let successResult = Right 42
+--   let errorResult = Left "Something went wrong"
+--   putStrLn $ handleResult successResult -- Kết quả: Success: 42
+--   putStrLn $ handleResult errorResult -- Kết quả: Error: Something went wrong
+--Ví dụ 2: Xử lý ngoại lệ và kết quả thành công
+-- import Control.Exception (try, IOException)
+-- import Data.Either (either)
+-- -- Đọc tập tin và xử lý lỗi
+-- readFileSafely :: FilePath -> IO String
+-- readFileSafely path = do
+--     result <- try (readFile path) :: IO (Either IOException String)
+--     return $ either (\e -> "Error: " ++ show e) id result
+-- main :: IO ()
+-- main = do
+--     result <- readFileSafely "example.txt"
+--     putStrLn result
