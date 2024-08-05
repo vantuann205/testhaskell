@@ -92,6 +92,5 @@ main :: IO ()
 main = do
   printCommands
   prompt []
-
-  ok ne
+--xoa bo ok ne
   
